@@ -3,13 +3,19 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
+from titanic.config import CATEGORICAL_FEATURES, MODEL_PARAMS, NUMERIC_FEATURES
 
-def build_pipeline() -> Pipeline:
+
+def build_pipeline(params: dict | None = None) -> Pipeline:
+    params = params or MODEL_PARAMS
     preprocess = ColumnTransformer(
-        [("sex", OneHotEncoder(handle_unknown="ignore"), ["Sex"])],
-        remainder="passthrough",
+        [
+            ("sex", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL_FEATURES),
+            ("numeric", "passthrough", NUMERIC_FEATURES),
+        ],
+        remainder="drop",
     )
     return Pipeline([
         ("preprocess", preprocess),
-        ("model", RandomForestClassifier(n_estimators=100, max_depth=5, random_state=1)),
+        ("model", RandomForestClassifier(**params)),
     ])
