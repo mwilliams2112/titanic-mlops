@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-train = ["kagglehub==1.0.2"]
+train = ["kagglehub==1.0.2", "mlflow==3.17.1"]
 dev = ["pytest"]
 
 [tool.setuptools.packages.find]

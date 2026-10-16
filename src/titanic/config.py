@@ -10,6 +10,6 @@ RANDOM_STATE = 42
 
 MODEL_PARAMS = {
     "n_estimators": 100,
-    "max_depth": 5,
+    "max_depth": 3,
     "random_state": RANDOM_STATE,
 }
