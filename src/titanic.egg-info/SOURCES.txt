@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/titanic/__init__.py
+src/titanic/config.py
+src/titanic/data.py
+src/titanic/evaluate.py
+src/titanic/model.py
+src/titanic/predict.py
+src/titanic/train.py
+src/titanic.egg-info/PKG-INFO
+src/titanic.egg-info/SOURCES.txt
+src/titanic.egg-info/dependency_links.txt
+src/titanic.egg-info/top_level.txt
+tests/test_evaluate.py
+tests/test_model.py
+tests/test_predict.py
