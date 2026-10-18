@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run tests
+        run: uv run pytest
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies (including training extras)
+        run: uv sync --frozen --extra train
+
+      - name: Train a model
+        run: uv run python -m titanic.train
+
+      - name: Build image
+        run: docker build -t titanic-api .
+
+      - name: Smoke test the container
+        run: |
+          docker run -d --name api -p 8000:8000 titanic-api
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8000/health && break
+            sleep 2
+          done
+          curl -sf http://localhost:8000/health
+          curl -sf -X POST http://localhost:8000/predict \
+            -H "Content-Type: application/json" \
+            -d '{"Pclass": 1, "Sex": "female", "SibSp": 0, "Parch": 0}'
+          docker logs api
