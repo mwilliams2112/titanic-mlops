@@ -1,0 +1,1 @@
+[![CI](https://github.com/mwilliams2112/titanic-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/mwilliams2112/titanic-mlops/actions/workflows/ci.yml)
