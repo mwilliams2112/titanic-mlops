@@ -6,7 +6,7 @@ A small end-to-end machine learning system: train a model, track it, serve it be
 
 The model is deliberately simple (a random forest on four features of the Titanic dataset). The point of the project is the engineering around the model, not its accuracy.
 
-**Live demo:** [interactive API docs](https://YOUR-CLOUD-RUN-URL/docs) (hosted on Google Cloud Run; the first request after a quiet period is slower because the service scales to zero).
+**Live demo:** [interactive API docs](https://titanic-api-kvcju763sa-nw.a.run.app/docs) (hosted on Google Cloud Run; the first request after a quiet period is slower because the service scales to zero).
 
 ```bash
 curl -X POST https://YOUR-CLOUD-RUN-URL/predict \
