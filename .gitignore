@@ -4,3 +4,6 @@ __pycache__
 mlruns/
 mlflow.db
 .venv
+.firebase/
+firebase-debug.log
+firestore-debug.log
