@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e9efec">
+  <title>Titanic Passenger Forecast</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #173431;
+      --muted: #62736e;
+      --paper: #f7f8f4;
+      --canvas: #e9efec;
+      --line: #cbd6d1;
+      --green: #245c50;
+      --green-dark: #183f38;
+      --coral: #c4563b;
+      --gold: #d6a64a;
+      --white: #fff;
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--canvas);
+      background-image: repeating-linear-gradient(135deg, transparent 0 34px, rgb(23 52 49 / 3%) 34px 35px);
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(1120px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 34px 0 42px;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark { width: 23px; height: 23px; border: 2px solid var(--green); border-radius: 50%; position: relative; }
+    .brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: var(--green); }
+    .brand-mark::before { width: 2px; height: 13px; top: 3px; left: 9px; }
+    .brand-mark::after { width: 9px; height: 2px; top: 9px; left: 4px; }
+
+    .live-note { display: flex; align-items: center; gap: 8px; letter-spacing: 0.04em; text-transform: none; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+
+    header { padding: 46px 0 36px; }
+    .eyebrow { margin: 0 0 12px; color: var(--coral); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+    h1 { max-width: 700px; margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(42px, 6vw, 68px); font-weight: 400; line-height: 1.02; letter-spacing: 0; }
+    .intro { max-width: 580px; margin: 16px 0 0; color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .form-panel { padding: 30px 42px 34px 0; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 28px; }
+    h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-weight: 400; }
+    .required-note { color: var(--muted); font-size: 12px; }
+
+    .field { margin: 0 0 25px; padding: 0; border: 0; }
+    .field-label, legend { display: block; margin: 0 0 11px; color: var(--ink); font-size: 13px; font-weight: 700; }
+    .segmented { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .segmented.two { grid-template-columns: repeat(2, 1fr); }
+    .choice { position: relative; }
+    .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .choice span {
+      display: grid;
+      min-height: 46px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: rgb(255 255 255 / 55%);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
+    }
+    .choice input:checked + span { border-color: var(--green); background: var(--green); color: var(--white); }
+    .choice input:focus-visible + span { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+    .counts { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .number-field label { display: block; margin-bottom: 9px; font-size: 13px; font-weight: 700; }
+    .number-field small { display: block; min-height: 32px; margin-bottom: 8px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .number-field input { width: 100%; height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 3px; background: rgb(255 255 255 / 72%); color: var(--ink); }
+    .number-field input:focus { border-color: var(--green); outline: 2px solid rgb(36 92 80 / 20%); }
+
+    .submit-row { display: flex; align-items: center; gap: 15px; margin-top: 30px; }
+    .submit-button { min-height: 48px; padding: 0 22px; border: 0; border-radius: 3px; background: var(--coral); color: var(--white); cursor: pointer; font-size: 14px; font-weight: 700; transition: background-color 140ms ease; }
+    .submit-button:hover:not(:disabled) { background: #a9442d; }
+    .submit-button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    .submit-button:disabled { cursor: wait; opacity: 0.7; }
+    .request-status { color: var(--muted); font-size: 12px; }
+
+    .result-panel { display: flex; flex-direction: column; justify-content: space-between; min-height: 430px; padding: 30px 30px 26px; background: var(--green-dark); color: var(--white); }
+    .result-kicker { margin: 0; color: #b7d1c8; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+    .result-body { padding: 45px 0 34px; }
+    .result-state { margin: 0; color: #d3e2dc; font-family: Georgia, "Times New Roman", serif; font-size: 32px; font-weight: 400; line-height: 1.12; }
+    .result-state[data-outcome="survived"] { color: #d8c17f; }
+    .result-state[data-outcome="not-survived"] { color: #f0a38b; }
+    .result-explainer { max-width: 300px; margin: 12px 0 0; color: #b7c9c2; font-size: 13px; line-height: 1.5; }
+    .probability-block { padding-top: 22px; border-top: 1px solid rgb(255 255 255 / 20%); }
+    .probability-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 11px; }
+    .probability-label { color: #b7c9c2; font-size: 12px; }
+    .probability-value { color: var(--white); font-variant-numeric: tabular-nums; font-size: 20px; }
+    .meter { height: 5px; overflow: hidden; background: rgb(255 255 255 / 18%); }
+    .meter-fill { width: 0; height: 100%; background: var(--gold); transition: width 450ms ease; }
+    .result-foot { margin: 20px 0 0; color: #9fb6ad; font-size: 11px; line-height: 1.5; }
+
+    .connection { margin-top: 20px; }
+    .connection summary { width: fit-content; color: var(--muted); cursor: pointer; font-size: 12px; }
+    .connection-inner { display: grid; grid-template-columns: 1fr auto; gap: 10px; max-width: 620px; margin-top: 12px; }
+    .connection label { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+    .connection input { min-width: 0; height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 3px; background: var(--paper); color: var(--ink); font-size: 12px; }
+    .connection button { padding: 0 13px; border: 1px solid var(--line); border-radius: 3px; background: transparent; color: var(--green-dark); cursor: pointer; font-size: 12px; font-weight: 700; }
+    .connection button:hover { background: rgb(255 255 255 / 55%); }
+    .connection-status { grid-column: 1 / -1; min-height: 16px; margin: 0; color: var(--muted); font-size: 12px; }
+
+    footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 18px; color: var(--muted); font-size: 11px; }
+    footer a { color: var(--green); text-underline-offset: 3px; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 32px, 560px); padding-top: 20px; }
+      header { padding: 34px 0 28px; }
+      .workspace { grid-template-columns: 1fr; }
+      .form-panel { padding: 26px 0 30px; }
+      .result-panel { min-height: 340px; padding: 25px 22px 22px; }
+      .result-body { padding: 32px 0 28px; }
+      footer { flex-direction: column; gap: 8px; }
+    }
+
+    @media (max-width: 420px) {
+      .page { width: calc(100% - 24px); }
+      .topline { align-items: flex-start; font-size: 10px; }
+      .live-note { max-width: 120px; text-align: right; }
+      .counts { gap: 12px; }
+      .number-field small { min-height: 48px; }
+      .submit-row { align-items: flex-start; flex-direction: column; }
+      .connection-inner { grid-template-columns: 1fr; }
+      .connection button { min-height: 40px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topline">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span>Passenger records / 1912</span></div>
+      <div class="live-note"><span class="live-dot" aria-hidden="true"></span><span>Model service connection</span></div>
+    </div>
+
+    <header>
+      <p class="eyebrow">A small machine-learning demonstration</p>
+      <h1>One passenger.<br>One prediction.</h1>
+      <p class="intro">Enter a few passenger details to request a survival estimate from the Titanic model API.</p>
+    </header>
+
+    <section class="workspace" aria-label="Passenger prediction">
+      <form class="form-panel" id="passenger-form">
+        <div class="panel-heading">
+          <h2>Passenger details</h2>
+          <span class="required-note">All fields required</span>
+        </div>
+
+        <fieldset class="field">
+          <legend>Ticket class</legend>
+          <div class="segmented">
+            <label class="choice"><input type="radio" name="Pclass" value="1" checked><span>1st class</span></label>
+            <label class="choice"><input type="radio" name="Pclass" value="2"><span>2nd class</span></label>
+            <label class="choice"><input type="radio" name="Pclass" value="3"><span>3rd class</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Sex</legend>
+          <div class="segmented two">
+            <label class="choice"><input type="radio" name="Sex" value="female" checked><span>Female</span></label>
+            <label class="choice"><input type="radio" name="Sex" value="male"><span>Male</span></label>
+          </div>
+        </fieldset>
+
+        <div class="counts">
+          <div class="number-field">
+            <label for="sibsp">Siblings / spouses</label>
+            <small>Number aboard with the passenger</small>
+            <input id="sibsp" name="SibSp" type="number" min="0" max="10" step="1" value="0" required>
+          </div>
+          <div class="number-field">
+            <label for="parch">Parents / children</label>
+            <small>Number aboard with the passenger</small>
+            <input id="parch" name="Parch" type="number" min="0" max="10" step="1" value="0" required>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button class="submit-button" id="predict-button" type="submit">Predict survival</button>
+          <span class="request-status" id="request-status" role="status" aria-live="polite">Ready when you are.</span>
+        </div>
+      </form>
+
+      <section class="result-panel" aria-labelledby="result-heading" aria-live="polite">
+        <p class="result-kicker" id="result-heading">Prediction result</p>
+        <div class="result-body">
+          <p class="result-state" id="result-state">Awaiting passenger</p>
+          <p class="result-explainer" id="result-explainer">Your result will appear here after the API responds.</p>
+        </div>
+        <div>
+          <div class="probability-block">
+            <div class="probability-line">
+              <span class="probability-label">Estimated survival probability</span>
+              <span class="probability-value" id="probability-value">--%</span>
+            </div>
+            <div class="meter" role="meter" aria-label="Estimated survival probability" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="meter-fill" id="meter-fill"></div>
+            </div>
+          </div>
+          <p class="result-foot">An estimate from a small demonstration model, not a statement of historical certainty.</p>
+        </div>
+      </section>
+    </section>
+
+    <details class="connection">
+      <summary>API connection settings</summary>
+      <div class="connection-inner">
+        <label for="api-url">API base URL</label>
+        <input id="api-url" type="url" spellcheck="false" autocomplete="url">
+        <button id="check-connection" type="button">Check connection</button>
+        <p class="connection-status" id="connection-status" role="status" aria-live="polite"></p>
+      </div>
+    </details>
+
+    <footer>
+      <span>Titanic survival model / FastAPI</span>
+      <a id="docs-link" href="https://titanic-api-kvcju763sa-nw.a.run.app/docs" target="_blank" rel="noreferrer">Open API documentation</a>
+    </footer>
+  </main>
+
+  <script>
+    const DEFAULT_API_URL = "https://titanic-api-kvcju763sa-nw.a.run.app";
+    const apiUrlInput = document.querySelector("#api-url");
+    const connectionStatus = document.querySelector("#connection-status");
+    const form = document.querySelector("#passenger-form");
+    const predictButton = document.querySelector("#predict-button");
+    const requestStatus = document.querySelector("#request-status");
+    const resultState = document.querySelector("#result-state");
+    const resultExplainer = document.querySelector("#result-explainer");
+    const probabilityValue = document.querySelector("#probability-value");
+    const meter = document.querySelector(".meter");
+    const meterFill = document.querySelector("#meter-fill");
+    const docsLink = document.querySelector("#docs-link");
+
+    apiUrlInput.value = localStorage.getItem("titanic-api-url") || DEFAULT_API_URL;
+    updateDocsLink();
+
+    function apiBaseUrl() {
+      return apiUrlInput.value.trim().replace(/\/+$/, "");
+    }
+
+    function updateDocsLink() {
+      const base = apiBaseUrl();
+      docsLink.href = `${base}/docs`;
+    }
+
+    apiUrlInput.addEventListener("change", () => {
+      localStorage.setItem("titanic-api-url", apiBaseUrl());
+      updateDocsLink();
+      connectionStatus.textContent = "API URL saved in this browser.";
+    });
+
+    document.querySelector("#check-connection").addEventListener("click", async () => {
+      connectionStatus.textContent = "Checking API...";
+      try {
+        const response = await fetch(`${apiBaseUrl()}/health`);
+        if (!response.ok) throw new Error(`Health check returned HTTP ${response.status}`);
+        connectionStatus.textContent = "API is reachable.";
+      } catch (error) {
+        connectionStatus.textContent = `Could not reach API: ${error.message}`;
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = new FormData(form);
+      const passenger = {
+        Pclass: Number(data.get("Pclass")),
+        Sex: data.get("Sex"),
+        SibSp: Number(data.get("SibSp")),
+        Parch: Number(data.get("Parch")),
+      };
+
+      predictButton.disabled = true;
+      predictButton.textContent = "Requesting prediction...";
+      requestStatus.textContent = "Sending passenger details to the API.";
+      resultState.textContent = "Calculating...";
+      resultState.removeAttribute("data-outcome");
+      resultExplainer.textContent = "Waiting for the model response.";
+
+      try {
+        const response = await fetch(`${apiBaseUrl()}/predict`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(passenger),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          const detail = Array.isArray(result.detail)
+            ? result.detail.map((issue) => `${issue.loc.at(-1)}: ${issue.msg}`).join("; ")
+            : result.detail || `Request failed with HTTP ${response.status}`;
+          throw new Error(detail);
+        }
+
+        const survived = result.prediction === 1;
+        const probability = Math.max(0, Math.min(1, Number(result.probability)));
+        const percent = Math.round(probability * 100);
+        resultState.textContent = survived ? "Model predicts survival" : "Model predicts non-survival";
+        resultState.dataset.outcome = survived ? "survived" : "not-survived";
+        resultExplainer.textContent = "The model's predicted probability of survival is shown below.";
+        probabilityValue.textContent = `${percent}%`;
+        meter.setAttribute("aria-valuenow", String(percent));
+        meterFill.style.width = `${percent}%`;
+        requestStatus.textContent = "Prediction received.";
+      } catch (error) {
+        resultState.textContent = "Prediction unavailable";
+        resultState.removeAttribute("data-outcome");
+        resultExplainer.textContent = error.message.includes("Failed to fetch")
+          ? "The browser could not reach the API. Check the URL, service status, and whether CORS is enabled in the deployed API."
+          : error.message;
+        requestStatus.textContent = "Request failed.";
+      } finally {
+        predictButton.disabled = false;
+        predictButton.textContent = "Predict survival";
+      }
+    });
+  </script>
+</body>
+</html>

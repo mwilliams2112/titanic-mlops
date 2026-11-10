@@ -22,6 +22,20 @@ def test_health(client):
     assert response.json() == {"status": "ok"}
 
 
+def test_predict_allows_browser_preflight(client):
+    response = client.options(
+        "/predict",
+        headers={
+            "Origin": "http://localhost:5500",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "*"
+
+
 def test_predict_returns_valid_response(client):
     response = client.post("/predict", json=VALID)
 
